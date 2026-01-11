@@ -284,6 +284,7 @@ class MainActivity : AppCompatActivity() {
 
                 expenseAdapter.submitList(groupExpenses)
                 groupId?.let { showBalanceSummary(it) }
+                groupId?.let{showDetailBalanceSummary(it)}
             }
         }
 
@@ -293,6 +294,7 @@ class MainActivity : AppCompatActivity() {
                 expenseAdapter.setUsers(users)
                 binding.tvGroupMembers.text = "👥 ${users.size} people"
                 showBalanceSummary(groupId!!)
+//                showDetailBalanceSummary(groupId!!)
             }
         }
     }
@@ -301,7 +303,8 @@ class MainActivity : AppCompatActivity() {
         groupId?.let {
             viewModel.loadGroupExpenses(it)
             viewModel.loadUsersInGroup(it)
-            showBalanceSummary(it)
+//            showBalanceSummary(it)
+//            showDetailBalanceSummary(it)
         }
     }
 
@@ -318,11 +321,76 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
+    private fun showDetailBalanceSummary(groupId: String) {
+        lifecycleScope.launch {
+            binding.layoutWhoOwesWhom.removeAllViews()
+            binding.tvWhoOwesHeader.visibility = View.GONE
+            binding.layoutWhoOwesWhom.visibility = View.GONE
+
+            val users = usersInGroup
+            if (users.isEmpty()) return@launch
+
+            var anyDebts = false
+
+            users.forEach { user ->
+                val details = viewModel.getDetailedNetSummary(groupId, user.userId)
+
+                if (details.isNotEmpty()) {
+                    anyDebts = true
+                    val header = TextView(this@MainActivity).apply {
+                        text = user.name
+                        textSize = 16f
+                        setPadding(0, 8, 0, 4)
+                        setTypeface(null, android.graphics.Typeface.BOLD)
+                    }
+                    binding.layoutWhoOwesWhom.addView(header)
+
+                    details.forEach { line ->
+                        val tv = TextView(this@MainActivity).apply {
+                            textSize = 14f
+                            setPadding(12, 0, 0, 2)
+
+                            val color = if (line.isOwed)
+                                getColor(R.color.red_500)
+                            else
+                                getColor(R.color.green_500)
+
+                            val spannable = android.text.SpannableString(line.text)
+                            val amountStart = line.text.lastIndexOf('₹')
+                            if (amountStart != -1) {
+                                spannable.setSpan(
+                                    android.text.style.ForegroundColorSpan(color),
+                                    amountStart,
+                                    spannable.length,
+                                    android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                                )
+                                spannable.setSpan(
+                                    android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
+                                    amountStart,
+                                    spannable.length,
+                                    android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                                )
+                            }
+
+                            text = spannable
+                        }
+                        binding.layoutWhoOwesWhom.addView(tv)
+                    }
+                }
+            }
+
+            if (anyDebts) {
+                binding.tvWhoOwesHeader.visibility = View.VISIBLE
+                binding.layoutWhoOwesWhom.visibility = View.VISIBLE
+            }
+        }
+    }
+
     private fun showBalanceSummary(groupId: String) {
         lifecycleScope.launch {
             val netBalances = viewModel.calculateNetBalances(groupId)
 
-            binding.layoutPaidBySummary.removeAllViews()
+            binding.layoutBalanceSummary.removeAllViews()
 
             val meaningful = netBalances.filterValues { kotlin.math.abs(it) > 0.01 }
 
@@ -376,7 +444,7 @@ class MainActivity : AppCompatActivity() {
                     text = spannable
                 }
 
-                binding.layoutPaidBySummary.addView(tv)
+                binding.layoutBalanceSummary.addView(tv)
             }
         }
     }
@@ -453,7 +521,8 @@ class MainActivity : AppCompatActivity() {
                                     splitBetweenUserIds = if (splitType == SplitType.BETWEEN)
                                         selectedUserIds.toList() else null
                                 )
-                                showBalanceSummary(groupId!!)
+//                                showBalanceSummary(groupId!!)
+//                                showDetailBalanceSummary(groupId!!)
                                 Toast.makeText(this@MainActivity, "Expense added!", Toast.LENGTH_SHORT).show()
                             }
                         }

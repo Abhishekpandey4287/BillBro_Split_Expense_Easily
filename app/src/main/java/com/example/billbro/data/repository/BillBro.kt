@@ -80,6 +80,17 @@ class BillBro @Inject constructor(
                 group.addMember(user)
             }
 
+            val expenses = expenseDao.getExpensesByGroup(groupId)
+
+            expenses.forEach { expenseEntity ->
+                val splits = splitDao.getSplitsByExpense(expenseEntity.expenseId)
+                splits.forEach { split ->
+                    if (split.userId != expenseEntity.paidUserId) {
+                        group.updateBalance(split.userId, expenseEntity.paidUserId, split.amount)
+                    }
+                }
+            }
+
             groups[groupId] = group
             group
         }

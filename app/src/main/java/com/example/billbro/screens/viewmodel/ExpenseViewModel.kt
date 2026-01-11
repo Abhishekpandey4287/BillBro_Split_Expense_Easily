@@ -2,6 +2,7 @@ package com.example.billbro.screens.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.billbro.data.module.DetailedLine
 import com.example.billbro.data.module.Expense
 import com.example.billbro.data.module.Group
 import com.example.billbro.data.module.SplitType
@@ -67,8 +68,66 @@ class ExpenseViewModel @Inject constructor(
         loadUsersInGroup(groupId)
     }
 
-    suspend fun getGroup(groupId: String): Group? {
-        return billBro.getGroup(groupId)
+    suspend fun getDetailedNetSummary(
+        groupId: String,
+        targetUserId: String
+    ): List<DetailedLine> {
+
+        val expenses = billBro.getAllExpenses().filter { it.groupId == groupId }
+        val users = _usersInGroup.value
+        if (users.isEmpty()) return emptyList()
+
+        val rawDebts = mutableMapOf<Pair<String, String>, Double>()
+
+        expenses.forEach { expense ->
+            val splits = billBro.getSplitsByExpense(expense.expenseId)
+
+            splits.forEach { split ->
+                if (split.userId != expense.paidUserId) {
+                    val key = split.userId to expense.paidUserId
+                    rawDebts[key] = (rawDebts[key] ?: 0.0) + split.amount
+                }
+            }
+        }
+
+        val netDebts = mutableMapOf<Pair<String,String>, Double>()
+
+        rawDebts.forEach { (pair, amountAB) ->
+            val (A, B) = pair
+            val amountBA = rawDebts[B to A] ?: 0.0
+            val net = amountAB - amountBA
+
+            if (net > 0.01) netDebts[A to B] = net
+            else if (-net > 0.01) netDebts[B to A] = -net
+        }
+
+        val result = mutableListOf<DetailedLine>()
+
+        netDebts.forEach { (pair, amount) ->
+            val (A, B) = pair
+            val nameA = users.find { it.userId == A }?.name ?: A
+            val nameB = users.find { it.userId == B }?.name ?: B
+
+            val formattedAmount = "₹${"%.2f".format(amount)}"
+
+            if (A == targetUserId) {
+                result.add(
+                    DetailedLine(
+                        text = "I owe $nameB $formattedAmount",
+                        isOwed = true
+                    )
+                )
+            } else if (B == targetUserId) {
+                result.add(
+                    DetailedLine(
+                        text = "$nameA owes me $formattedAmount",
+                        isOwed = false
+                    )
+                )
+            }
+        }
+
+        return result
     }
 
     suspend fun calculateNetBalances(groupId: String): Map<String, Double> {
