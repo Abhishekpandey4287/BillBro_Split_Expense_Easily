@@ -74,6 +74,7 @@ class MainActivity : AppCompatActivity() {
         setupRecyclerView()
         observeViewModel()
         loadData()
+        setupScrollIndicator()
 
         binding.btnAdd.setOnClickListener {
             showAddExpenseDialog()
@@ -385,6 +386,57 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    private fun setupScrollIndicator() {
+        binding.scrollViewBalance.viewTreeObserver.addOnGlobalLayoutListener {
+            updateScrollIndicatorVisibility()
+        }
+
+        binding.scrollViewBalance.setOnScrollChangeListener { _, _, scrollY, _, _ ->
+            updateScrollIndicatorVisibility()
+        }
+    }
+
+    private fun updateScrollIndicatorVisibility() {
+        val scrollView = binding.scrollViewBalance
+        val child = scrollView.getChildAt(0)
+
+        if (child != null) {
+            val canScroll = child.height > scrollView.height
+            val isAtBottom = scrollView.scrollY + scrollView.height >= child.height - 10
+
+            // Show indicator only if content is scrollable and user is not at bottom
+            val shouldShow = canScroll && !isAtBottom
+
+            binding.scrollIndicatorGradient.visibility = if (shouldShow) View.VISIBLE else View.GONE
+            binding.scrollIndicatorIcon.visibility = if (shouldShow) View.VISIBLE else View.GONE
+
+            // Optional: Animate the icon
+            if (shouldShow) {
+                animateScrollIndicator()
+            }
+        }
+    }
+
+    private fun animateScrollIndicator() {
+        binding.scrollIndicatorIcon.animate()
+            .translationY(8f)
+            .setDuration(800)
+            .withEndAction {
+                binding.scrollIndicatorIcon.animate()
+                    .translationY(0f)
+                    .setDuration(800)
+                    .withEndAction {
+                        // Repeat animation if still visible
+                        if (binding.scrollIndicatorIcon.visibility == View.VISIBLE) {
+                            animateScrollIndicator()
+                        }
+                    }
+                    .start()
+            }
+            .start()
+    }
+
 
     private fun showBalanceSummary(groupId: String) {
         lifecycleScope.launch {

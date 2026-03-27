@@ -102,6 +102,7 @@ class GroupAdapter(
 
             // Display member count
             val memberCount = group.getMembers().size
+            binding.tvMemberCount.text = "$memberCount members"
             // You can add a TextView for member count or use an existing one
             // For now, we'll add it to the balance summary
             if (binding.tvBalanceSummary.text.isEmpty()) {
