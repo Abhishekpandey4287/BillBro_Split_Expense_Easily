@@ -46,7 +46,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:orientation="vertical"
-            app:layout_constraintEnd_toStartOf="@id/ivMore"
+            app:layout_constraintBottom_toBottomOf="@+id/avatarCard"
             app:layout_constraintStart_toEndOf="@id/avatarCard"
             app:layout_constraintTop_toTopOf="@id/avatarCard">
 
@@ -55,26 +55,26 @@
                 android:id="@+id/tv_group_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Goa Trip"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="?attr/colorOnSurface"
+                android:ellipsize="end"
                 android:maxLines="1"
-                android:ellipsize="end" />
+                android:text="Goa Trip"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
             <!-- Balance Summary with icon -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
-                    android:visibility="gone"
                     android:src="@drawable/ic_expense"
+                    android:visibility="gone"
                     app:tint="@color/gray_500" />
 
                 <TextView
@@ -83,9 +83,9 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
                     android:text="You owe ₹320"
-                    android:visibility="gone"
                     android:textColor="@color/gray_700"
-                    android:textSize="14sp" />
+                    android:textSize="14sp"
+                    android:visibility="gone" />
             </LinearLayout>
 
             <!-- Member count badge -->
@@ -93,9 +93,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
+                app:cardBackgroundColor="?attr/colorPrimaryContainer"
                 app:cardCornerRadius="12dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="?attr/colorPrimaryContainer">
+                app:cardElevation="0dp">
 
                 <TextView
                     android:id="@+id/tvMemberCount"
@@ -104,9 +104,9 @@
                     android:paddingHorizontal="10dp"
                     android:paddingVertical="4dp"
                     android:text="6 members"
+                    android:textColor="?attr/colorOnPrimaryContainer"
                     android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:textColor="?attr/colorOnPrimaryContainer" />
+                    android:textStyle="bold" />
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
 
